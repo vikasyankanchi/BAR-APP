@@ -599,6 +599,7 @@ def reset_system():
     flash('System reset successfully. All stock operations and audit logs erased.', 'success')
     return redirect(url_for('owner_dashboard'))
 
+init_db()
+
 if __name__ == '__main__':
-    init_db()
     app.run(debug=True, port=5000)
