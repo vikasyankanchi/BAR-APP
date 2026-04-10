@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="mb-6 flex justify-between items-end">
+    <div>
+        <h1 class="text-3xl font-bold text-gray-900 border-l-4 border-brand-primary pl-3">Daily Expenses</h1>
+        <p class="text-sm text-gray-500 mt-1 pl-3">Track shop overheads for the working date: <span class="font-bold text-gray-800">{{ working_date.strftime('%B %d, %Y') }}</span></p>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div class="lg:col-span-1">
+        <div class="bg-white rounded-xl shadow-md border border-gray-100 p-6">
+            <h3 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2"><i class="fa-solid fa-plus-circle text-brand-primary mr-2"></i>Add Expense</h3>
+            <form method="POST">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Amount (₹)</label>
+                        <input type="number" step="0.01" name="amount" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-brand-primary focus:border-brand-primary sm:text-sm px-3 py-2 border">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Note / Description</label>
+                        <textarea name="note" rows="3" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-brand-primary focus:border-brand-primary sm:text-sm px-3 py-2 border" placeholder="e.g. Ice bags, Staff snacks"></textarea>
+                    </div>
+                    <button type="submit" class="w-full bg-red-500 text-white font-bold py-2 px-4 rounded-md hover:bg-red-600 transition-colors shadow">
+                        Record Expense
+                    </button>
+                    <p class="text-xs text-gray-400 text-center">Expenses log directly to the working date.</p>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div class="lg:col-span-2">
+        <div class="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+                <h3 class="text-lg font-bold text-gray-800"><i class="fa-solid fa-list-ul text-gray-500 mr-2"></i>Ledger for {{ working_date.strftime('%d/%m') }}</h3>
+                <span class="bg-red-100 text-red-800 text-xs font-bold px-2.5 py-1 rounded-full border border-red-200">
+                    Total: ₹{{ "%.2f"|format(expenses | sum(attribute='amount')) }}
+                </span>
+            </div>
+            <div class="overflow-y-auto max-h-[400px]">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-white sticky top-0 border-b">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Note</th>
+                            <th scope="col" class="px-6 py-3 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for expense in expenses %}
+                        <tr class="hover:bg-red-50/50 transition-colors border-l-4 border-l-transparent hover:border-l-red-500">
+                            <td class="px-6 py-4 text-sm text-gray-900">{{ expense.note }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600 text-right">₹{{ "%.2f"|format(expense.amount) }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="2" class="px-6 py-8 text-center text-gray-500 italic">No expenses recorded for this date.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

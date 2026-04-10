@@ -1,0 +1,23 @@
+/* Ensure number inputs don't show spinner arrows, styling overrides */
+input[type="number"]::-webkit-inner-spin-button, 
+input[type="number"]::-webkit-outer-spin-button { 
+  -webkit-appearance: none; 
+  margin: 0; 
+}
+
+input[type="number"] {
+  -moz-appearance: textfield; /* Firefox support */
+}
+
+/* Base custom styles to add generic polishing */
+body {
+  scroll-behavior: smooth;
+}
+
+.closing-stock-input {
+  transition: all 0.2s ease-in-out;
+}
+
+.closing-stock-input:focus {
+  transform: scale(1.05);
+}

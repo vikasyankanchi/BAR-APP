@@ -1,0 +1,339 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="mb-6 flex justify-between items-end">
+    <div>
+        <h1 class="text-3xl font-bold text-gray-900 border-l-4 border-brand-primary pl-3">Owner Dashboard</h1>
+        <p class="text-sm text-gray-500 mt-1 pl-3">Business overview & analytics for reporting date: <span class="font-bold text-gray-800">{{ report_date.strftime('%B %d, %Y') }}</span></p>
+    </div>
+</div>
+
+{% if estimated_dates %}
+<div class="mb-8 p-4 bg-yellow-50 border-l-4 border-yellow-500 rounded-r-lg shadow-sm flex items-start">
+    <div class="flex-shrink-0">
+         <i class="fa-solid fa-triangle-exclamation text-yellow-500 text-xl"></i>
+    </div>
+    <div class="ml-3">
+        <h3 class="text-sm font-bold text-yellow-800 uppercase tracking-wider">Estimated Data Warning</h3>
+        <div class="mt-1 text-sm text-yellow-700">
+            The following recent dates were submitted as <strong>Estimated</strong> entries by staff. Analytics may not be completely accurate for:
+            <ul class="list-disc pl-5 mt-2 font-bold">
+                {% for dt in estimated_dates %}
+                    <li>{{ dt }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Key Metrics Cards -->
+<div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-5 mb-8">
+    <div class="bg-white overflow-hidden shadow-md rounded-xl border border-gray-100">
+        <div class="p-5">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 bg-blue-100 rounded-md p-3">
+                    <i class="fa-solid fa-bottle-droplet text-blue-600 text-xl"></i>
+                </div>
+                <div class="ml-5 w-0 flex-1">
+                    <dl>
+                        <dt class="text-sm font-medium text-gray-500 truncate">Total Bottles Sold</dt>
+                        <dd class="text-2xl font-bold text-gray-900">{{ sales }}</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+        <div class="bg-blue-50 px-5 py-2">
+            <div class="text-xs text-blue-700 font-semibold uppercase tracking-wider">Outflow</div>
+        </div>
+    </div>
+    
+    <div class="bg-white overflow-hidden shadow-md rounded-xl border border-gray-100">
+        <div class="p-5">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 bg-purple-100 rounded-md p-3">
+                    <i class="fa-solid fa-boxes-packing text-purple-600 text-xl"></i>
+                </div>
+                <div class="ml-5 w-0 flex-1">
+                    <dl>
+                        <dt class="text-sm font-medium text-gray-500 truncate">Total Purchases</dt>
+                        <dd class="text-xl font-bold text-gray-900">₹{{ "%.2f"|format(purchases) }}</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+        <div class="bg-purple-50 px-5 py-2 flex justify-between">
+            <div class="text-xs text-purple-700 font-semibold uppercase tracking-wider">Inflow</div>
+            <div class="text-xs text-purple-800 font-bold">{{ purchased_bottles }} Bottles</div>
+        </div>
+    </div>
+
+    <div class="bg-white overflow-hidden shadow-md rounded-xl border border-gray-100">
+        <div class="p-5">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 bg-green-100 rounded-md p-3">
+                    <i class="fa-solid fa-indian-rupee-sign text-green-600 text-xl"></i>
+                </div>
+                <div class="ml-5 w-0 flex-1">
+                    <dl>
+                        <dt class="text-sm font-medium text-gray-500 truncate">Total Revenue</dt>
+                        <dd class="text-xl font-bold text-gray-900">₹{{ "%.2f"|format(revenue) }}</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+        <div class="bg-green-50 px-5 py-2">
+            <div class="text-xs text-green-700 font-semibold uppercase tracking-wider">Gross Sales</div>
+        </div>
+    </div>
+
+    <div class="bg-white overflow-hidden shadow-md rounded-xl border border-gray-100">
+        <div class="p-5">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 bg-red-100 rounded-md p-3">
+                    <i class="fa-solid fa-money-bill-transfer text-red-600 text-xl"></i>
+                </div>
+                <div class="ml-5 w-0 flex-1">
+                    <dl>
+                        <dt class="text-sm font-medium text-gray-500 truncate">Total Expenses</dt>
+                        <dd class="text-xl font-bold text-gray-900">₹{{ "%.2f"|format(expenses) }}</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+        <div class="bg-red-50 px-5 py-2">
+            <div class="text-xs text-red-700 font-semibold uppercase tracking-wider">Recorded Overheads</div>
+        </div>
+    </div>
+    
+    <div class="bg-white overflow-hidden shadow-md rounded-xl border border-gray-100">
+        <div class="p-5">
+            <div class="flex items-center">
+                <div class="flex-shrink-0 bg-brand-accent/20 rounded-md p-3">
+                    <i class="fa-solid fa-piggy-bank text-brand-accent text-xl"></i>
+                </div>
+                <div class="ml-5 w-0 flex-1">
+                    <dl>
+                        <dt class="text-sm font-medium text-gray-500 truncate">Net Profit</dt>
+                        <dd class="text-xl font-bold {{ 'text-green-600' if net_profit >= 0 else 'text-red-600' }}">₹{{ "%.2f"|format(net_profit) }}</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+        <div class="bg-brand-light px-5 py-2">
+            <div class="text-xs font-semibold uppercase tracking-wider {{ 'text-green-700' if net_profit >= 0 else 'text-red-700' }}">After Expenses</div>
+        </div>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+    <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100 flex flex-col h-full">
+        <h3 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Category-wise Revenue</h3>
+        <div class="relative h-[250px] w-full flex justify-center mb-6">
+            <canvas id="salesPieChart"></canvas>
+        </div>
+        <h4 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 border-b border-dashed border-gray-200 pb-2">Revenue Breakdown</h4>
+        <div id="categoryAmountsList" class="flex-grow grid grid-cols-1 sm:grid-cols-2 gap-3 overflow-y-auto pr-1">
+            <!-- JS populates exact amounts -->
+        </div>
+    </div>
+    
+    <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100">
+        <h3 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Inflow vs Outflow Overview</h3>
+        <div class="flex flex-col h-[300px] justify-center items-center">
+            <div class="w-full flex items-center justify-between px-8 py-4 border rounded-xl mb-4 bg-purple-50 border-purple-100">
+                <div class="flex items-center">
+                    <i class="fa-solid fa-boxes-packing text-3xl text-purple-400 mr-4"></i>
+                    <div>
+                        <p class="text-xs text-purple-600 uppercase font-bold">Total Inflow (New Stock)</p>
+                        <h4 class="text-2xl font-black text-purple-800">{{ purchased_bottles }} Bottles</h4>
+                    </div>
+                </div>
+            </div>
+            
+            <i class="fa-solid fa-arrows-up-down text-gray-300 text-2xl mb-4"></i>
+            
+            <div class="w-full flex items-center justify-between px-8 py-4 border rounded-xl bg-blue-50 border-blue-100">
+                <div class="flex items-center">
+                    <i class="fa-solid fa-bottle-droplet text-3xl text-blue-400 mr-4"></i>
+                    <div>
+                        <p class="text-xs text-blue-600 uppercase font-bold">Total Outflow (Sold)</p>
+                        <h4 class="text-2xl font-black text-blue-800">{{ sales }} Bottles</h4>
+                    </div>
+                </div>
+            </div>
+            
+            <p class="text-xs text-gray-400 text-center mt-4">Compares new inventory additions vs actual sales for the current reporting day.</p>
+        </div>
+    </div>
+</div>
+
+<div class="mt-4 mb-4 bg-green-50 border border-green-200 rounded-xl p-6 shadow-sm">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div class="flex items-center mb-4 sm:mb-0">
+            <div class="bg-green-100 p-3 rounded-full flex items-center justify-center mr-4">
+                <i class="fa-solid fa-file-excel text-green-600 text-xl"></i>
+            </div>
+            <div>
+                <h3 class="text-xl font-bold text-green-800">Export Sales Data</h3>
+                <p class="text-sm text-green-700 mt-1 max-w-xl">Download robust spreadsheets securely. Input boundary ranges down below returning complete analytics formatted to `.xlsx` natively.</p>
+            </div>
+        </div>
+        
+        <form method="POST" action="{{ url_for('download_report') }}" onsubmit="return validateDateRange()" class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto items-stretch sm:items-center">
+            <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 w-full">
+                <div class="flex flex-col">
+                    <label class="text-xs text-green-800 font-bold mb-1 ml-1 cursor-pointer" onclick="document.getElementById('start_date').value='2026-01-01'">Start Date</label>
+                    <input type="date" name="start_date" id="start_date" required class="border-green-300 focus:ring-green-500 rounded-md shadow-sm sm:text-sm px-3 py-2 bg-white">
+                </div>
+                <div class="flex flex-col">
+                    <label class="text-xs text-green-800 font-bold mb-1 ml-1 cursor-pointer" onclick="document.getElementById('end_date').value='{{ report_date }}'">End Date (Or Click Here for Today)</label>
+                    <input type="date" name="end_date" id="end_date" required value="{{ report_date }}" class="border-green-300 focus:ring-green-500 rounded-md shadow-sm sm:text-sm px-3 py-2 bg-white">
+                </div>
+            </div>
+            <button type="submit" class="bg-green-600 text-white font-bold mt-5 px-6 py-2.5 rounded-lg shadow-md hover:bg-green-700 transition-colors border border-green-700 focus:outline-none whitespace-nowrap flex-[1_0_auto]">
+                <i class="fa-solid fa-download mr-1"></i> Build & Extract
+            </button>
+        </form>
+    </div>
+</div>
+
+<div class="mt-4 mb-2 bg-red-50 border border-red-200 rounded-xl p-6 shadow-sm">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div class="flex items-center">
+            <div class="bg-red-100 p-3 rounded-full flex items-center justify-center mr-4">
+                <i class="fa-solid fa-triangle-exclamation text-red-600 text-xl"></i>
+            </div>
+            <div>
+                <h3 class="text-xl font-bold text-red-800">Danger Zone: Reset System</h3>
+                <p class="text-sm text-red-600 mt-1 max-w-2xl">This action irreversibly deletes all historical stock and sales data. System structure (Products, Categories) will remain completely intact.</p>
+            </div>
+        </div>
+        <form method="POST" action="{{ url_for('reset_system') }}" id="resetSystemForm">
+            <button type="button" onclick="confirmReset()" class="bg-red-600 text-white font-bold px-6 py-2.5 rounded-lg shadow-md hover:bg-red-700 transition-colors border border-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 whitespace-nowrap">
+                <i class="fa-solid fa-fire mr-2"></i> Erase Daily Data
+            </button>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function validateDateRange() {
+        const start = document.getElementById('start_date').value;
+        const end = document.getElementById('end_date').value;
+        if (start && end) {
+            const date1 = new Date(start);
+            const date2 = new Date(end);
+            const diffTime = Math.abs(date2 - date1);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+            if (diffDays > 60) {
+                return confirm("Large date range (" + diffDays + " days) may create many sheets. Continue?");
+            }
+        }
+        return true;
+    }
+
+    function confirmReset() {
+        if (confirm("This will delete all stock and sales data. Continue?")) {
+            const userInput = prompt("Type RESET to confirm your action:");
+            if (userInput === "RESET") {
+                document.getElementById('resetSystemForm').submit();
+            } else if (userInput !== null) {
+                alert("Reset cancelled: Type strictly 'RESET' to confirm.");
+            }
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        fetch('/api/sales_chart_data')
+            .then(response => response.json())
+            .then(data => {
+                const ctx = document.getElementById('salesPieChart').getContext('2d');
+                
+                if (data.data.length === 0 || data.data.every(val => val === 0)) {
+                    const container = document.getElementById('salesPieChart').parentElement;
+                    container.innerHTML = '<div class="flex flex-col items-center justify-center h-full text-gray-400 italic"><i class="fa-solid fa-chart-pie text-4xl mb-2 text-gray-200"></i>No sales recorded for this date.</div>';
+                    return;
+                }
+                
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: data.labels,
+                        datasets: [{
+                            data: data.data,
+                            backgroundColor: [
+                                'rgba(59, 130, 246, 0.8)', 
+                                'rgba(139, 92, 246, 0.8)', 
+                                'rgba(16, 185, 129, 0.8)', 
+                                'rgba(245, 158, 11, 0.8)', 
+                                'rgba(239, 68, 68, 0.8)',  
+                                'rgba(14, 165, 233, 0.8)'  
+                            ],
+                            borderWidth: 2,
+                            borderColor: '#ffffff',
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'right',
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.label || '';
+                                        if (label) {
+                                            label += ': ';
+                                        }
+                                        if (context.parsed !== null) {
+                                            label += new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(context.parsed);
+                                        }
+                                        return label;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+                
+                // Populate category list underneath chart
+                const listContainer = document.getElementById('categoryAmountsList');
+                const solidColors = [
+                    'rgba(59, 130, 246, 1)', 
+                    'rgba(139, 92, 246, 1)', 
+                    'rgba(16, 185, 129, 1)', 
+                    'rgba(245, 158, 11, 1)', 
+                    'rgba(239, 68, 68, 1)',  
+                    'rgba(14, 165, 233, 1)' 
+                ];
+                
+                let listHTML = '';
+                for(let i=0; i<data.labels.length; i++) {
+                    const amountRaw = data.data[i];
+                    if(amountRaw > 0) {
+                        const amountFormatted = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(amountRaw);
+                        const boxColor = solidColors[i % solidColors.length];
+                        
+                        listHTML += `
+                        <div class="flex items-center justify-between p-3 border rounded-xl bg-gradient-to-r from-gray-50 to-white shadow-sm hover:shadow-md transition-shadow">
+                            <div class="flex items-center">
+                                <span class="w-3 h-3 rounded-full mr-3 shadow-sm border border-white" style="background-color: ${boxColor}"></span>
+                                <span class="font-bold text-gray-600 text-sm tracking-wide">${data.labels[i]}</span>
+                            </div>
+                            <span class="font-black text-gray-900 text-sm">${amountFormatted}</span>
+                        </div>
+                        `;
+                    }
+                }
+                listContainer.innerHTML = listHTML;
+            });
+    });
+</script>
+{% endblock %}

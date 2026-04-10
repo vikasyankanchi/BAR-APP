@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="mb-6 flex justify-between items-end">
+    <div>
+        <h1 class="text-3xl font-bold text-gray-900 border-l-4 border-brand-primary pl-3">Product Management</h1>
+        <p class="text-sm text-gray-500 mt-1 pl-3">Add new brands or update current pricing</p>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+    <div class="lg:col-span-1">
+        <div class="bg-white rounded-xl shadow-md border border-gray-100 p-6 sticky top-6">
+            <h3 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2"><i class="fa-solid fa-plus-circle text-brand-primary mr-2"></i>Add Brand</h3>
+            <form method="POST">
+                <input type="hidden" name="action" value="add">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Brand Name</label>
+                        <input type="text" name="brand_name" required placeholder="e.g., Black & White" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-brand-primary focus:border-brand-primary sm:text-sm px-3 py-2 border">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Category</label>
+                        <select name="category_id" id="categorySelect" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-brand-primary focus:border-brand-primary sm:text-sm px-3 py-2 border bg-white">
+                            <option value="" disabled selected>Select Category</option>
+                            {% for cat in categories %}
+                            <option value="{{ cat.id }}">{{ cat.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">ML Size</label>
+                        <select name="ml_id" id="mlSelect" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-brand-primary focus:border-brand-primary sm:text-sm px-3 py-2 border bg-gray-50" disabled>
+                            <option value="" disabled selected>Select Category First</option>
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Cost P. (₹)</label>
+                            <input type="number" step="0.01" name="cost_price" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-brand-primary focus:border-brand-primary sm:text-sm px-3 py-2 border">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Selling P. (₹)</label>
+                            <input type="number" step="0.01" name="selling_price" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-brand-primary focus:border-brand-primary sm:text-sm px-3 py-2 border">
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full bg-brand-primary text-white font-bold py-2 px-4 rounded-md hover:bg-blue-600 transition-colors shadow mt-2">
+                        Create Product
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div class="lg:col-span-2">
+        <div class="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+                <h3 class="text-lg font-bold text-gray-800"><i class="fa-solid fa-boxes-stacked text-gray-500 mr-2"></i>Current Inventory Catalogs</h3>
+                <label class="flex items-center cursor-pointer text-sm font-semibold text-gray-600 hover:text-gray-900 transition-colors bg-white px-3 py-1.5 rounded-full border border-gray-200 shadow-sm">
+                    <input type="checkbox" id="showDeletedToggle" onchange="toggleDeleted()" class="mr-2 w-4 h-4 rounded text-red-500 focus:ring-red-400 border-gray-300"> Show Disabled
+                </label>
+            </div>
+            <div class="overflow-y-auto max-h-[600px]">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-white sticky top-0 z-10 shadow-sm">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Product Info</th>
+                            <th scope="col" class="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">Prices (CP / SP)</th>
+                            <th scope="col" class="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for product in products %}
+                        <tr class="hover:bg-gray-50 transition-colors {{ 'hidden inactive-product' if not product.is_active else '' }} {{ 'opacity-50 grayscale bg-red-50/20' if not product.is_active else '' }}">
+                            <td class="px-6 py-4">
+                                <div class="font-bold text-gray-900">{{ product.brand_name }}</div>
+                                <div class="text-xs mt-1">
+                                    <span class="bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full border border-gray-200">{{ product.category.name }}</span>
+                                    <span class="text-gray-500 ml-1">{{ product.ml_size.value }} ml</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex flex-col items-center gap-1 text-sm">
+                                    <span class="text-gray-500 line-through text-xs">CP: ₹{{"%.2f"|format(product.cost_price)}}</span>
+                                    <span class="font-bold text-green-600">SP: ₹{{"%.2f"|format(product.selling_price)}}</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 text-center whitespace-nowrap">
+                                <button onclick="openEditModal('{{ product.id }}', '{{ product.brand_name|escape }}', '{{ product.cost_price }}', '{{ product.selling_price }}')" class="text-brand-primary hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-md transition-colors text-sm font-medium border border-blue-200">
+                                    <i class="fa-solid fa-pen-to-square mr-1"></i> Edit Prices
+                                </button>
+                                <button onclick="confirmSoftDelete('{{ product.id }}', '{{ product.brand_name|escape }}', '{{ product.is_active }}')" class="ml-2 {{ 'text-red-700 bg-red-50 border-red-200 hover:bg-red-100/70' if product.is_active else 'text-green-700 bg-green-50 border-green-200 hover:bg-green-100/70' }} px-3 py-1.5 rounded-md transition-colors text-sm font-medium border shadow-sm">
+                                    <i class="fa-solid {{ 'fa-trash-can' if product.is_active else 'fa-rotate-left' }} mr-1"></i> {{ 'Disable' if product.is_active else 'Restore' }}
+                                </button>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="3" class="px-6 py-8 text-center text-gray-500">
+                                No products found. Add one to get started.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="editModal" class="fixed inset-0 bg-gray-900/50 hidden items-center justify-center z-50 backdrop-blur-sm">
+    <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md transform transition-all border border-gray-100">
+        <div class="flex justify-between items-center mb-4 border-b pb-2">
+            <h3 class="text-lg font-bold text-gray-900">Update Prices</h3>
+            <button onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                <i class="fa-solid fa-times text-xl"></i>
+            </button>
+        </div>
+        <p class="text-sm text-gray-500 mb-4">Editing details for <strong id="editProductBrand" class="text-brand-dark"></strong></p>
+        <form method="POST">
+            <input type="hidden" name="action" value="edit">
+            <input type="hidden" name="product_id" id="editProductId">
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Brand Name</label>
+                    <input type="text" name="brand_name" id="editBrandName" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-brand-primary focus:border-brand-primary sm:text-sm px-3 py-2 border">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Cost Price (₹)</label>
+                    <input type="number" step="0.01" name="cost_price" id="editCostPrice" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-brand-primary focus:border-brand-primary sm:text-sm px-3 py-2 border">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Selling Price (₹)</label>
+                    <input type="number" step="0.01" name="selling_price" id="editSellingPrice" required class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-brand-primary focus:border-brand-primary sm:text-sm px-3 py-2 border">
+                </div>
+                <p class="text-xs text-yellow-600 bg-yellow-50 p-2 rounded border border-yellow-200 mt-2">
+                    <i class="fa-solid fa-triangle-exclamation mr-1"></i>
+                    Price updates apply to future entries. Past data retains prices valid at the time of entry.
+                </p>
+                <div class="mt-5 flex justify-end gap-3 pt-4 border-t border-gray-100">
+                    <button type="button" onclick="closeEditModal()" class="bg-gray-100 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-200 transition-colors text-sm font-medium">Cancel</button>
+                    <button type="submit" class="bg-brand-primary text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors text-sm font-bold shadow">Save Changes</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const catSelect = document.getElementById('categorySelect');
+        const mlSelect = document.getElementById('mlSelect');
+
+        catSelect.addEventListener('change', function() {
+            const catId = this.value;
+            if (!catId) return;
+
+            mlSelect.innerHTML = '<option value="" disabled selected>Loading...</option>';
+            mlSelect.disabled = true;
+
+            fetch(`/api/get_mls/${catId}`)
+                .then(response => response.json())
+                .then(data => {
+                    mlSelect.innerHTML = '<option value="" disabled selected>Select ML Size</option>';
+                    data.forEach(ml => {
+                        const option = document.createElement('option');
+                        option.value = ml.id;
+                        option.textContent = ml.value + ' ml';
+                        mlSelect.appendChild(option);
+                    });
+                    mlSelect.disabled = false;
+                    mlSelect.classList.remove('bg-gray-50');
+                    mlSelect.classList.add('bg-white');
+                })
+                .catch(err => {
+                    console.error('Error fetching MLs', err);
+                    mlSelect.innerHTML = '<option value="" disabled selected>Error loading options</option>';
+                });
+        });
+    });
+
+    const editModal = document.getElementById('editModal');
+    
+    function openEditModal(id, brandName, cp, sp) {
+        document.getElementById('editProductId').value = id;
+        document.getElementById('editProductBrand').textContent = brandName;
+        document.getElementById('editBrandName').value = brandName;
+        document.getElementById('editCostPrice').value = cp;
+        document.getElementById('editSellingPrice').value = sp;
+        editModal.classList.remove('hidden');
+        editModal.classList.add('flex');
+    }
+    
+    function closeEditModal() {
+        editModal.classList.add('hidden');
+        editModal.classList.remove('flex');
+    }
+
+    function toggleDeleted() {
+        const show = document.getElementById('showDeletedToggle').checked;
+        document.querySelectorAll('.inactive-product').forEach(el => {
+            if (show) {
+                el.classList.remove('hidden');
+            } else {
+                el.classList.add('hidden');
+            }
+        });
+    }
+
+    function confirmSoftDelete(id, name, isActive) {
+        const isCurrentlyActive = (isActive.toLowerCase() === 'true');
+        const actionText = isCurrentlyActive ? 'disable' : 'restore';
+        
+        let confirmFlow = false;
+        
+        if (isCurrentlyActive) {
+            alert("Step 1: You are about to safely mask '" + name + "' from your normal Staff layout routines.");
+            confirmFlow = confirm("Step 2: This will hide the product globally but KEEP all historical bounds intact. Continue?");
+        } else {
+            confirmFlow = confirm("Are you sure you want to restore '" + name + "' back onto live operations?");
+        }
+        
+        if (confirmFlow) {
+            fetch(`/api/toggle_product/${id}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            }).then(response => response.json()).then(data => {
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    alert('Error modifying status.');
+                }
+            }).catch(err => {
+                console.error(err);
+                alert('Connection error.');
+            });
+        }
+    }
+</script>
+{% endblock %}

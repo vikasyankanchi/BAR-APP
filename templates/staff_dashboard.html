@@ -1,0 +1,444 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% if is_up_to_date %}
+<div class="flex flex-col items-center justify-center p-12 bg-white rounded-xl shadow-md border border-green-100 mt-10">
+    <div class="h-20 w-20 bg-green-100 rounded-full flex items-center justify-center mb-6">
+        <i class="fa-solid fa-circle-check text-4xl text-green-500"></i>
+    </div>
+    <h1 class="text-3xl font-bold text-gray-900 mb-2">You are fully up to date!</h1>
+    <p class="text-gray-500 text-center max-w-md">No further stock entries are required. Ensure you come back tomorrow
+        to submit today's operations.</p>
+</div>
+{% else %}
+
+<div class="mb-6 flex justify-between items-end">
+    <div>
+        <h1 class="text-3xl font-bold text-gray-900 border-l-4 border-brand-primary pl-3">Daily Stock Entry</h1>
+        <p class="text-lg font-bold text-brand-dark mt-2 pl-3">Entering data for: <span
+                class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded border border-yellow-300">{{
+                target_date.strftime('%A, %B %d, %Y') }}</span></p>
+    </div>
+    <div class="flex gap-3">
+        <!-- Mark as Closed Button -->
+        <form method="POST" class="inline"
+            onsubmit="return confirm('WARNING: This will lock this day as CLOSED. No revenue or sales will be recorded. Proceed?');">
+            <input type="hidden" name="action" value="closed">
+            <button type="submit"
+                class="bg-gray-800 text-white px-4 py-2 rounded-lg font-bold shadow-sm hover:bg-gray-900 transition-colors">
+                <i class="fa-solid fa-door-closed mr-2"></i> Mark Day as Closed
+            </button>
+        </form>
+    </div>
+</div>
+
+<div class="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden">
+    <form method="POST" id="dailyStockForm">
+        <input type="hidden" name="action" id="formAction" value="regular">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col"
+                            class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Product
+                            Name</th>
+                        <th scope="col"
+                            class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                            Category & ML</th>
+                        <th scope="col"
+                            class="px-6 py-4 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">
+                            Selling Price</th>
+                        <th scope="col"
+                            class="px-6 py-4 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">
+                            Opening Stock</th>
+                        <th scope="col"
+                            class="px-6 py-4 text-center text-xs font-bold text-blue-600 uppercase tracking-wider bg-blue-50/50">
+                            New Stock</th>
+                        <th scope="col"
+                            class="px-6 py-4 text-center text-xs font-bold text-purple-600 uppercase tracking-wider bg-purple-50/50">
+                            Closing Stock</th>
+                        <th scope="col"
+                            class="px-6 py-4 text-center text-xs font-bold text-green-600 uppercase tracking-wider bg-green-50/50">
+                            Sold (Auto)</th>
+                        <th scope="col"
+                            class="px-6 py-4 text-center text-xs font-bold text-orange-600 uppercase tracking-wider bg-orange-50/50">
+                            Bulk (New Stock)</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% if grouped_entries %}
+                    {% for cat_name, entries in grouped_entries.items() %}
+                    <!-- Category Header -->
+                    <tr class="bg-gray-800 border-b-2 border-gray-900 shadow-sm">
+                        <td colspan="8" class="px-6 py-3">
+                            <h3 class="text-lg font-black text-white uppercase tracking-widest"><i
+                                    class="fa-solid fa-layer-group mr-2 opacity-50"></i>{{ cat_name }}</h3>
+                        </td>
+                    </tr>
+                    {% for entry in entries %}
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="font-bold text-gray-900 text-sm">{{ entry.product.brand_name }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span
+                                class="px-2.5 py-1 inline-flex text-xs leading-5 font-bold rounded-full bg-gray-100 text-gray-800 border border-gray-200 shadow-sm">
+                                {{ entry.product.ml_size.value }} ml
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium text-gray-700">
+                            ₹{{ "%.2f"|format(entry.selling_price_at_entry) }}
+                        </td>
+                        <td
+                            class="px-6 py-4 whitespace-nowrap text-center text-sm font-bold text-gray-700 bg-gray-50/30">
+                            {{ entry.opening_stock }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center bg-blue-50/20">
+                            <input type="number" name="new_stock_{{ entry.id }}"
+                                value="{{ entry.new_stock|default(0) }}" min="0"
+                                class="new-stock-input w-20 text-center border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm font-semibold text-blue-700"
+                                data-id="{{ entry.id }}" data-opening="{{ entry.opening_stock }}">
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center bg-purple-50/20">
+                            <input type="number" name="closing_stock_{{ entry.id }}" value="{{ entry.closing_stock }}"
+                                min="0" required
+                                class="closing-stock-input w-20 text-center border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 sm:text-sm font-semibold text-brand-dark"
+                                data-id="{{ entry.id }}" data-price="{{ entry.selling_price_at_entry }}"
+                                data-ml="{{ entry.product.ml_size.value }}">
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-bold text-green-600 bg-green-50/10 sold-cell"
+                            id="sold_{{ entry.id }}" data-val="{{ entry.sold }}">
+                            {{ entry.sold }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-bold text-orange-600 bg-orange-50/10 bulk-cell"
+                            id="bulk_{{ entry.id }}">
+                            {{ (entry.new_stock|default(0)) * entry.product.ml_size.value }} ml
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% endfor %}
+                    {% else %}
+                    <tr>
+                        <td colspan="8" class="px-6 py-12 text-center text-gray-500">
+                            <div class="flex flex-col items-center">
+                                <i class="fa-solid fa-box-open text-4xl mb-3 text-gray-300"></i>
+                                <p>No products available yet. Owner must add products first.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if grouped_entries %}
+        <!-- Total Sales Display & Actions -->
+        <div class="bg-gray-100 border-t-2 border-gray-200 px-6 py-10 mt-6 shadow-inner">
+            <div class="max-w-5xl mx-auto flex flex-col gap-8">
+                
+                <!-- Modern Dashboard Style Totals -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Total Sold Card -->
+                    <div class="bg-white overflow-hidden shadow-md rounded-xl border border-gray-200 p-6 transform transition-transform hover:-translate-y-1 hover:shadow-lg">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 bg-blue-100 rounded-xl p-4 shadow-sm">
+                                <i class="fa-solid fa-bottle-droplet text-blue-600 text-3xl"></i>
+                            </div>
+                            <div class="ml-6 flex-1">
+                                <h3 class="text-sm font-black text-gray-500 uppercase tracking-widest">Total Sold</h3>
+                                <div class="mt-1 flex items-baseline">
+                                    <span class="text-4xl font-black text-gray-900" id="total_bottles_display">0</span>
+                                    <span class="ml-2 text-sm font-bold text-gray-400">bottles</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Total Sales Card -->
+                    <div class="bg-white overflow-hidden shadow-md rounded-xl border border-gray-200 p-6 transform transition-transform hover:-translate-y-1 hover:shadow-lg">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 bg-green-100 rounded-xl p-4 shadow-sm">
+                                <i class="fa-solid fa-indian-rupee-sign text-green-600 text-3xl ml-1"></i>
+                            </div>
+                            <div class="ml-6 flex-1">
+                                <h3 class="text-sm font-black text-gray-500 uppercase tracking-widest">Total Sales</h3>
+                                <div class="mt-1 flex items-baseline">
+                                    <span class="text-4xl font-black text-green-600">₹<span id="total_sales_display">0.00</span></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Separation Line -->
+                <div class="relative mt-4 mb-2">
+                    <div class="absolute inset-0 flex items-center" aria-hidden="true">
+                        <div class="w-full border-t-2 border-gray-300 border-dashed"></div>
+                    </div>
+                    <div class="relative flex justify-center">
+                        <span class="bg-gray-100 px-4 py-1 rounded-full text-xs font-black text-gray-500 uppercase tracking-widest shadow-sm border border-gray-200"><i class="fa-solid fa-sliders mr-2"></i>Save Options</span>
+                    </div>
+                </div>
+
+                <!-- Modern Action Buttons -->
+                {% if current_user.role == 'staff' %}
+                <div class="flex flex-col sm:flex-row justify-center gap-5">
+                    <button type="submit" formnovalidate
+                        onclick="document.getElementById('formAction').value='save_stock'; return confirm('Save draft of current entries?');"
+                        class="group flex-1 flex flex-col items-center justify-center bg-white text-gray-700 px-6 py-5 rounded-2xl font-bold shadow-md hover:shadow-xl hover:bg-gray-50 transition-all border-2 border-gray-200 hover:border-gray-300">
+                        <div class="bg-gray-100 p-3 rounded-full mb-3 group-hover:bg-gray-200 transition-colors">
+                            <i class="fa-solid fa-file-pen text-2xl text-gray-500 group-hover:text-gray-700 transition-colors"></i>
+                        </div>
+                        <span class="text-lg">Save Draft</span>
+                        <span class="text-xs text-gray-400 font-semibold mt-1 uppercase tracking-wider">Save without locking</span>
+                    </button>
+                    
+                    <button type="submit" formnovalidate
+                        onclick="document.getElementById('formAction').value='estimated'; return confirm('Mark these entries as estimated? They will be flagged and can be edited.');"
+                        class="group flex-1 flex flex-col items-center justify-center bg-white text-yellow-800 px-6 py-5 rounded-2xl font-bold shadow-md hover:shadow-xl hover:bg-yellow-50 transition-all border-2 border-yellow-200 hover:border-yellow-400">
+                        <div class="bg-yellow-100 p-3 rounded-full mb-3 group-hover:bg-yellow-200 transition-colors">
+                            <i class="fa-solid fa-triangle-exclamation text-2xl text-yellow-500 group-hover:text-yellow-600 transition-colors"></i>
+                        </div>
+                        <span class="text-lg">Save as Estimated</span>
+                        <span class="text-xs text-yellow-600/70 font-semibold mt-1 uppercase tracking-wider">Mark as temporary</span>
+                    </button>
+
+                    <button type="button" id="submitDayEntryBtn" onclick="triggerStep1()"
+                        class="group flex-1 flex flex-col items-center justify-center bg-brand-primary text-white px-6 py-5 rounded-2xl font-bold shadow-lg hover:shadow-xl hover:bg-blue-600 transition-all border-2 border-brand-primary hover:border-blue-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-brand-primary disabled:hover:shadow-lg"
+                        disabled>
+                        <div class="bg-blue-500 p-3 rounded-full mb-3 group-hover:bg-blue-600 transition-colors shadow-inner">
+                            <i class="fa-solid fa-lock text-2xl text-white transition-colors"></i>
+                        </div>
+                        <span class="text-lg">Save & Lock Data</span>
+                        <span class="text-xs text-blue-200 font-semibold mt-1 uppercase tracking-wider">Final submission</span>
+                    </button>
+                </div>
+                {% else %}
+                <!-- Owner options -->
+                <div class="flex flex-col sm:flex-row justify-center gap-5 max-w-3xl mx-auto w-full">
+                    <button type="submit" formnovalidate
+                        onclick="document.getElementById('formAction').value='save_stock'; return confirm('Save draft of current entries?');"
+                        class="group flex-1 flex flex-col items-center justify-center bg-white text-gray-700 px-6 py-5 rounded-2xl font-bold shadow-md hover:shadow-xl hover:bg-gray-50 transition-all border-2 border-gray-200 hover:border-gray-300">
+                        <div class="bg-gray-100 p-3 rounded-full mb-3 group-hover:bg-gray-200 transition-colors">
+                            <i class="fa-solid fa-file-pen text-2xl text-gray-500 group-hover:text-gray-700 transition-colors"></i>
+                        </div>
+                        <span class="text-lg">Save Draft</span>
+                        <span class="text-xs text-gray-400 font-semibold mt-1 uppercase tracking-wider">Save without locking</span>
+                    </button>
+                    
+                    <button type="submit" formnovalidate
+                        onclick="document.getElementById('formAction').value='save_stock'; return confirm('Save new stock to memory?');"
+                        class="group flex-1 flex flex-col items-center justify-center bg-white text-teal-800 px-6 py-5 rounded-2xl font-bold shadow-md hover:shadow-xl hover:bg-teal-50 transition-all border-2 border-teal-200 hover:border-teal-400">
+                        <div class="bg-teal-100 p-3 rounded-full mb-3 group-hover:bg-teal-200 transition-colors">
+                            <i class="fa-solid fa-boxes-packing text-2xl text-teal-600 group-hover:text-teal-700 transition-colors"></i>
+                        </div>
+                        <span class="text-lg">Save Stock</span>
+                        <span class="text-xs text-teal-600/70 font-semibold mt-1 uppercase tracking-wider">Update quantities</span>
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </form>
+</div>
+
+<!-- Custom Confirmation Modal -->
+<div id="saveConfirmModal"
+    class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full z-50 transition-opacity flex items-center justify-center">
+    <div class="relative mx-auto p-6 border w-11/12 max-w-lg shadow-2xl rounded-2xl bg-white">
+        <div class="mt-2 text-center">
+            <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-blue-100 mb-6">
+                <i class="fa-solid fa-cloud-arrow-up text-3xl text-blue-600"></i>
+            </div>
+            <h3 class="text-2xl leading-6 font-black text-gray-900 mb-2">Final Warning</h3>
+            <p class="text-lg text-red-500 font-bold mb-4">This will LOCK the data and cannot be edited. Proceed?</p>
+            <div class="mt-4 px-6 py-4 bg-gray-50 rounded-xl border border-gray-200">
+                <div class="flex justify-between items-center mb-3">
+                    <span class="text-sm font-bold text-gray-500 uppercase tracking-widest text-left">Total Bottles
+                        Sold</span>
+                    <span class="text-xl font-bold text-blue-600" id="modal_bottles_sold">0</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-sm font-bold text-gray-500 uppercase tracking-widest text-left">Total Sales
+                        Amount</span>
+                    <span class="text-xl font-bold text-green-600">₹<span id="modal_sales_amount">0.00</span></span>
+                </div>
+            </div>
+            <div class="flex justify-center gap-4 mt-6">
+                <button type="button" onclick="closeConfirmModal()"
+                    class="px-6 py-2.5 bg-white text-gray-700 hover:bg-gray-50 border border-gray-300 font-bold rounded-lg transition-colors w-full">Cancel
+                    / Go Back</button>
+                <button type="button" onclick="submitActualForm()"
+                    class="px-6 py-2.5 bg-brand-primary text-white hover:bg-blue-600 font-bold rounded-lg shadow-md transition-colors w-full border border-blue-600"><i
+                        class="fa-solid fa-lock mr-2"></i> Submit & Lock</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function submitActualForm() {
+        document.getElementById('formAction').value = 'regular';
+        document.getElementById('dailyStockForm').submit();
+    }
+
+    function triggerStep1() {
+        const form = document.getElementById('dailyStockForm');
+        // Step 1: Validation
+        if (!form.reportValidity()) {
+            return;
+        }
+        // Step 2: Native Confirmation Popup
+        if (confirm("Are you sure you want to submit today's entry?")) {
+            triggerConfirmModal();
+        }
+    }
+
+    function triggerConfirmModal() {
+        const bottles = document.getElementById('total_bottles_display').innerText;
+        const sales = document.getElementById('total_sales_display').innerText;
+        document.getElementById('modal_bottles_sold').innerText = bottles;
+        document.getElementById('modal_sales_amount').innerText = sales;
+        document.getElementById('saveConfirmModal').classList.remove('hidden');
+    }
+
+    function closeConfirmModal() {
+        document.getElementById('saveConfirmModal').classList.add('hidden');
+    }
+
+    function submitEstimated() {
+        document.getElementById('formAction').value = 'estimated';
+        return confirm('Mark these entries as estimated? They will be flagged for the owner.');
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const closingInputs = document.querySelectorAll('.closing-stock-input');
+        const newInputs = document.querySelectorAll('.new-stock-input');
+
+        function updateRow(id) {
+            const newStockInput = document.querySelector(`input[name="new_stock_${id}"]`);
+            const closingStockInput = document.querySelector(`input[name="closing_stock_${id}"]`);
+
+            const opening = parseInt(newStockInput.getAttribute('data-opening')) || 0;
+            let newStock = parseInt(newStockInput.value) || 0;
+            let closing = parseInt(closingStockInput.value) || 0;
+
+            if (newStock < 0) {
+                newStock = 0;
+                newStockInput.value = 0;
+            }
+
+            const totalAvailable = opening + newStock;
+            
+            let isInvalid = false;
+            if (closing > totalAvailable) {
+                isInvalid = true;
+                closingStockInput.classList.add('ring-2', 'ring-red-500', 'bg-red-50');
+            } else {
+                closingStockInput.classList.remove('ring-2', 'ring-red-500', 'bg-red-50');
+            }
+
+            if (closing < 0) {
+                closing = 0;
+                closingStockInput.value = 0;
+            }
+
+            const sold = totalAvailable - closing;
+            const price = parseFloat(closingStockInput.getAttribute('data-price')) || 0;
+            const ml = parseInt(closingStockInput.getAttribute('data-ml')) || 0;
+
+            const soldCell = document.getElementById(`sold_${id}`);
+            if (isInvalid || sold < 0) {
+                soldCell.textContent = '! Warning';
+                soldCell.classList.add('text-red-500', 'bg-red-100');
+                soldCell.classList.remove('text-green-600', 'bg-green-50/10');
+                soldCell.setAttribute('data-val', 0); // exclude
+                soldCell.setAttribute('data-invalid', "1");
+            } else {
+                soldCell.textContent = sold;
+                soldCell.classList.remove('text-red-500', 'bg-red-100');
+                soldCell.classList.add('text-green-600', 'bg-green-50/10');
+                soldCell.setAttribute('data-val', sold);
+                soldCell.setAttribute('data-invalid', "0");
+            }
+
+            document.getElementById(`bulk_${id}`).textContent = (newStock * ml) + ' ml';
+
+            updateTotals();
+        }
+
+        function updateTotals() {
+            let totalBottles = 0;
+            let totalSales = 0;
+            let hasInvalid = false;
+
+            document.querySelectorAll('.closing-stock-input').forEach(input => {
+                const id = input.getAttribute('data-id');
+                const price = parseFloat(input.getAttribute('data-price')) || 0;
+                const soldCell = document.getElementById(`sold_${id}`);
+                const isInvalid = soldCell.getAttribute('data-invalid') === "1";
+                
+                if (!isInvalid) {
+                    const sold = parseInt(soldCell.getAttribute('data-val')) || 0;
+                    totalBottles += sold;
+                    totalSales += (sold * price);
+                } else {
+                    hasInvalid = true;
+                }
+            });
+
+            const bottlesEl = document.getElementById('total_bottles_display');
+            const salesEl = document.getElementById('total_sales_display');
+
+            if (bottlesEl && salesEl) {
+                bottlesEl.textContent = totalBottles;
+                salesEl.textContent = totalSales.toFixed(2);
+            }
+            
+            checkFormValidity(hasInvalid);
+        }
+
+        newInputs.forEach(input => {
+            input.addEventListener('input', function () {
+                updateRow(this.getAttribute('data-id'));
+            });
+        });
+
+        closingInputs.forEach(input => {
+            input.addEventListener('input', function () {
+                updateRow(this.getAttribute('data-id'));
+            });
+        });
+
+        // Initialize totals on load
+        closingInputs.forEach(input => {
+            updateRow(input.getAttribute('data-id'));
+        });
+
+        function checkFormValidity(hasInvalidRows) {
+            const form = document.getElementById('dailyStockForm');
+            const submitBtn = document.getElementById('submitDayEntryBtn');
+            if (submitBtn) {
+                submitBtn.disabled = hasInvalidRows || !form.checkValidity();
+            }
+        }
+
+        function validateForm() {
+            let hasInvalid = false;
+            document.querySelectorAll('.sold-cell').forEach(cell => {
+                if (cell.getAttribute('data-invalid') === "1") {
+                    hasInvalid = true;
+                }
+            });
+            checkFormValidity(hasInvalid);
+        }
+
+        document.getElementById('dailyStockForm').addEventListener('input', validateForm);
+        validateForm();
+    });
+</script>
+{% endblock %}
