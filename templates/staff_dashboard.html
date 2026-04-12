@@ -35,9 +35,9 @@
 <div class="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden">
     <form method="POST" id="dailyStockForm">
         <input type="hidden" name="action" id="formAction" value="regular">
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
+        <div class="overflow-x-auto md:overflow-visible px-3 py-4 md:p-0">
+            <table class="min-w-full md:divide-y md:divide-gray-200 block md:table">
+                <thead class="bg-gray-50 hidden md:table-header-group">
                     <tr>
                         <th scope="col"
                             class="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Product
@@ -65,52 +65,81 @@
                             Bulk (New Stock)</th>
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
+                <tbody class="block md:table-row-group bg-transparent md:bg-white md:divide-y md:divide-gray-200">
                     {% if grouped_entries %}
                     {% for cat_name, entries in grouped_entries.items() %}
                     <!-- Category Header -->
-                    <tr class="bg-gray-800 border-b-2 border-gray-900 shadow-sm">
-                        <td colspan="8" class="px-6 py-3">
+                    <tr class="block md:table-row bg-gray-800 border-b md:border-b-2 border-gray-900 md:shadow-sm rounded-xl md:rounded-none mb-3 md:mb-0 mt-6 md:mt-0 first:mt-0 shadow-md">
+                        <td colspan="8" class="block md:table-cell px-6 py-3 text-center md:text-left">
                             <h3 class="text-lg font-black text-white uppercase tracking-widest"><i
-                                    class="fa-solid fa-layer-group mr-2 opacity-50"></i>{{ cat_name }}</h3>
+                                    class="fa-solid fa-layer-group mr-2 opacity-50 block md:inline mb-1 md:mb-0 text-xl md:text-lg"></i>{{ cat_name }}</h3>
                         </td>
                     </tr>
                     {% for entry in entries %}
-                    <tr class="hover:bg-gray-50 transition-colors">
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="font-bold text-gray-900 text-sm">{{ entry.product.brand_name }}</div>
+                    <tr class="block md:table-row bg-white hover:bg-gray-50 transition-colors border border-gray-200 md:border-none rounded-2xl md:rounded-none shadow-md md:shadow-none mb-5 md:mb-0 overflow-hidden">
+                        
+                        <td class="block md:table-cell p-4 md:px-6 md:py-4 border-b border-gray-100 md:border-none bg-gray-50 md:bg-transparent">
+                            <div class="flex items-center justify-between md:block">
+                                <div class="hidden md:block font-bold text-gray-900 text-sm">{{ entry.product.brand_name }}</div>
+                                <div class="md:hidden flex flex-col">
+                                    <span class="font-black text-gray-900 text-lg leading-tight">{{ entry.product.brand_name }}</span>
+                                    <span class="text-xs text-gray-600 font-bold mt-1.5 inline-block pt-1">
+                                        <span class="bg-white px-2 py-1 rounded shadow-sm border border-gray-200">{{ entry.product.ml_size.value }} ml</span> <span class="mx-1 text-gray-300">|</span> <span class="bg-green-50 text-green-700 px-2 py-1 rounded shadow-sm border border-green-200 font-black">₹{{ "%.2f"|format(entry.selling_price_at_entry) }}</span>
+                                    </span>
+                                </div>
+                                <div class="md:hidden bg-indigo-50 border border-indigo-100 rounded-lg px-3 py-1.5 text-center shadow-inner">
+                                    <div class="text-[0.65rem] font-bold text-indigo-400 uppercase tracking-widest mb-0.5">Opening</div>
+                                    <div class="font-black text-indigo-700 text-lg leading-none">{{ entry.opening_stock }}</div>
+                                </div>
+                            </div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
+                        
+                        <td class="hidden md:table-cell px-6 py-4 whitespace-nowrap">
                             <span
                                 class="px-2.5 py-1 inline-flex text-xs leading-5 font-bold rounded-full bg-gray-100 text-gray-800 border border-gray-200 shadow-sm">
                                 {{ entry.product.ml_size.value }} ml
                             </span>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium text-gray-700">
+                        <td class="hidden md:table-cell px-6 py-4 whitespace-nowrap text-center text-sm font-medium text-gray-700">
                             ₹{{ "%.2f"|format(entry.selling_price_at_entry) }}
                         </td>
                         <td
-                            class="px-6 py-4 whitespace-nowrap text-center text-sm font-bold text-gray-700 bg-gray-50/30">
+                            class="hidden md:table-cell px-6 py-4 whitespace-nowrap text-center text-sm font-bold text-gray-700 bg-gray-50/30">
                             {{ entry.opening_stock }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-center bg-blue-50/20">
-                            <input type="number" name="new_stock_{{ entry.id }}"
-                                value="{{ entry.new_stock|default(0) }}" min="0"
-                                class="new-stock-input w-20 text-center border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm font-semibold text-blue-700"
-                                data-id="{{ entry.id }}" data-opening="{{ entry.opening_stock }}">
+                        
+                        <td class="block md:table-cell px-4 py-3 md:px-6 md:py-4 md:whitespace-nowrap md:text-center md:bg-blue-50/20 bg-blue-50/10 border-b border-blue-50 md:border-none">
+                            <div class="flex items-center justify-between md:block">
+                                <label for="new_stock_{{ entry.id }}" class="md:hidden font-bold text-blue-600 text-sm uppercase"><i class="fa-solid fa-plus-circle mr-1"></i>New Stock</label>
+                                <input type="number" inputmode="numeric" pattern="[0-9]*" name="new_stock_{{ entry.id }}" id="new_stock_{{ entry.id }}"
+                                    value="{{ entry.new_stock|default(0) }}" min="0" required
+                                    class="new-stock-input w-24 md:w-20 text-center border-blue-300 rounded-xl md:rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-xl md:text-sm p-3 md:p-1 font-black text-blue-700 bg-white md:bg-transparent"
+                                    data-id="{{ entry.id }}" data-opening="{{ entry.opening_stock }}">
+                            </div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-center bg-purple-50/20">
-                            <input type="number" name="closing_stock_{{ entry.id }}" value="{{ entry.closing_stock }}"
-                                min="0" required
-                                class="closing-stock-input w-20 text-center border-gray-300 rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 sm:text-sm font-semibold text-brand-dark"
-                                data-id="{{ entry.id }}" data-price="{{ entry.selling_price_at_entry }}"
-                                data-ml="{{ entry.product.ml_size.value }}">
+                        
+                        <td class="block md:table-cell px-4 py-3 md:px-6 md:py-4 md:whitespace-nowrap md:text-center md:bg-purple-50/20 bg-purple-50/10 border-b border-purple-50 md:border-none">
+                            <div class="flex items-center justify-between md:block">
+                                <label for="closing_stock_{{ entry.id }}" class="md:hidden font-bold text-purple-700 text-sm uppercase"><i class="fa-solid fa-bullseye mr-1"></i>Closing Stock</label>
+                                <input type="number" inputmode="numeric" pattern="[0-9]*" name="closing_stock_{{ entry.id }}" id="closing_stock_{{ entry.id }}" value="{{ entry.closing_stock }}"
+                                    min="0" required
+                                    class="closing-stock-input w-24 md:w-20 text-center border-purple-300 rounded-xl md:rounded-md shadow-sm focus:ring-purple-500 focus:border-purple-500 text-xl md:text-sm p-3 md:p-1 font-black text-brand-dark bg-white md:bg-transparent"
+                                    data-id="{{ entry.id }}" data-price="{{ entry.selling_price_at_entry }}"
+                                    data-ml="{{ entry.product.ml_size.value }}">
+                            </div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-bold text-green-600 bg-green-50/10 sold-cell"
-                            id="sold_{{ entry.id }}" data-val="{{ entry.sold }}">
-                            {{ entry.sold }}
+                        
+                        <td class="block md:table-cell px-4 py-3 md:px-6 md:py-4 md:whitespace-nowrap md:text-center md:text-sm md:font-bold md:text-green-600 md:bg-green-50/10 bg-green-50/40 rounded-b-2xl md:rounded-none">
+                            <div class="flex justify-between items-center md:block">
+                                <span class="md:hidden font-black text-green-800 text-sm uppercase tracking-wide"><i class="fa-solid fa-arrow-trend-down mr-1"></i> Sold Today</span>
+                                <div class="text-2xl md:text-sm font-black text-green-700 sold-cell"
+                                    id="sold_{{ entry.id }}" data-val="{{ entry.sold }}">
+                                    {{ entry.sold }}
+                                </div>
+                            </div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-bold text-orange-600 bg-orange-50/10 bulk-cell"
+                        
+                        <td class="hidden md:table-cell px-6 py-4 whitespace-nowrap text-center text-sm font-bold text-orange-600 bg-orange-50/10 bulk-cell"
                             id="bulk_{{ entry.id }}">
                             {{ (entry.new_stock|default(0)) * entry.product.ml_size.value }} ml
                         </td>
@@ -132,8 +161,8 @@
         </div>
 
         {% if grouped_entries %}
-        <!-- Total Sales Display & Actions -->
-        <div class="bg-gray-100 border-t-2 border-gray-200 px-6 py-10 mt-6 shadow-inner">
+        <!-- DESKTOP Total Sales Display & Actions -->
+        <div class="hidden md:block bg-gray-100 border-t-2 border-gray-200 px-6 py-10 mt-6 shadow-inner">
             <div class="max-w-5xl mx-auto flex flex-col gap-8">
                 
                 <!-- Modern Dashboard Style Totals -->
@@ -147,7 +176,7 @@
                             <div class="ml-6 flex-1">
                                 <h3 class="text-sm font-black text-gray-500 uppercase tracking-widest">Total Sold</h3>
                                 <div class="mt-1 flex items-baseline">
-                                    <span class="text-4xl font-black text-gray-900" id="total_bottles_display">0</span>
+                                    <span class="text-4xl font-black text-gray-900 total-bottles-display">0</span>
                                     <span class="ml-2 text-sm font-bold text-gray-400">bottles</span>
                                 </div>
                             </div>
@@ -163,7 +192,7 @@
                             <div class="ml-6 flex-1">
                                 <h3 class="text-sm font-black text-gray-500 uppercase tracking-widest">Total Sales</h3>
                                 <div class="mt-1 flex items-baseline">
-                                    <span class="text-4xl font-black text-green-600">₹<span id="total_sales_display">0.00</span></span>
+                                    <span class="text-4xl font-black text-green-600">₹<span class="total-sales-display">0.00</span></span>
                                 </div>
                             </div>
                         </div>
@@ -239,6 +268,64 @@
                 {% endif %}
             </div>
         </div>
+
+        <!-- MOBILE Sticky Action Bar -->
+        <div class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-[0_-15px_30px_-5px_rgba(0,0,0,0.15)] z-40 px-3 py-3 rounded-t-2xl">
+            <!-- Mobile Totals Compact -->
+            <div class="flex justify-between items-center bg-gray-50 rounded-xl p-3 border border-gray-200 mb-3 overflow-hidden shadow-inner">
+                <div class="flex flex-col flex-1 pl-1">
+                    <span class="text-[0.65rem] font-bold text-gray-500 uppercase tracking-widest">Total Sold</span>
+                    <span class="text-xl font-black text-blue-600 leading-tight"><span class="total-bottles-display">0</span> <span class="text-xs font-bold text-gray-400">btl</span></span>
+                </div>
+                <div class="h-6 w-px bg-gray-300 mx-2"></div>
+                <div class="flex flex-col flex-1 text-right pr-1">
+                    <span class="text-[0.65rem] font-bold text-gray-500 uppercase tracking-widest">Total Sales</span>
+                    <span class="text-xl font-black text-green-600 leading-tight">₹<span class="total-sales-display">0.00</span></span>
+                </div>
+            </div>
+
+            <!-- Mobile Buttons Array -->
+            {% if current_user.role == 'staff' %}
+            <div class="flex gap-2">
+                <button type="submit" formnovalidate
+                    onclick="document.getElementById('formAction').value='save_stock'; return confirm('Save draft of current entries?');"
+                    class="flex-1 flex flex-col items-center justify-center bg-white text-gray-700 py-2.5 rounded-xl font-bold border-2 border-gray-200 active:bg-gray-100 transition-colors shadow-sm">
+                    <i class="fa-solid fa-file-pen text-lg text-gray-600 mb-1"></i>
+                    <span class="text-[0.65rem] uppercase tracking-wider">Draft</span>
+                </button>
+                <button type="submit" formnovalidate
+                    onclick="document.getElementById('formAction').value='estimated'; return confirm('Mark these entries as estimated?');"
+                    class="flex-1 flex flex-col items-center justify-center bg-yellow-50 text-yellow-800 py-2.5 rounded-xl font-bold border-2 border-yellow-200 active:bg-yellow-100 transition-colors shadow-sm">
+                    <i class="fa-solid fa-triangle-exclamation text-lg text-yellow-600 mb-1"></i>
+                    <span class="text-[0.65rem] uppercase tracking-wider">Est.</span>
+                </button>
+                <button type="button" onclick="triggerStep1()" id="submitDayEntryBtnMobile"
+                    class="flex-[1.4] flex flex-col items-center justify-center bg-brand-primary text-white py-2.5 rounded-xl font-bold shadow-md border-2 border-brand-primary active:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                    <i class="fa-solid fa-lock text-lg mb-1"></i>
+                    <span class="text-[0.65rem] uppercase tracking-wider">Lock</span>
+                </button>
+            </div>
+            {% else %}
+            <!-- Owner Options Mobile -->
+            <div class="flex gap-3">
+                <button type="submit" formnovalidate
+                    onclick="document.getElementById('formAction').value='save_stock'; return confirm('Save draft of current entries?');"
+                    class="flex-1 flex flex-col items-center justify-center bg-white text-gray-700 py-3 rounded-xl font-bold border-2 border-gray-200 active:bg-gray-100 transition-colors shadow-sm">
+                    <i class="fa-solid fa-file-pen text-xl text-gray-600 mb-1"></i>
+                    <span class="text-[0.7rem] uppercase tracking-wider">Save Draft</span>
+                </button>
+                <button type="submit" formnovalidate
+                    onclick="document.getElementById('formAction').value='save_stock'; return confirm('Save new stock to memory?');"
+                    class="flex-1 flex flex-col items-center justify-center bg-teal-50 text-teal-800 py-3 rounded-xl font-bold border-2 border-teal-200 active:bg-teal-100 transition-colors shadow-sm">
+                    <i class="fa-solid fa-boxes-packing text-xl text-teal-600 mb-1"></i>
+                    <span class="text-[0.7rem] uppercase tracking-wider">Save Stock</span>
+                </button>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Bottom spacing for sticky bar on mobile -->
+        <div class="h-44 md:h-0 w-full block md:hidden"></div>
         {% endif %}
     </form>
 </div>
@@ -299,8 +386,8 @@
     }
 
     function triggerConfirmModal() {
-        const bottles = document.getElementById('total_bottles_display').innerText;
-        const sales = document.getElementById('total_sales_display').innerText;
+        const bottles = document.querySelector('.total-bottles-display').innerText;
+        const sales = document.querySelector('.total-sales-display').innerText;
         document.getElementById('modal_bottles_sold').innerText = bottles;
         document.getElementById('modal_sales_amount').innerText = sales;
         document.getElementById('saveConfirmModal').classList.remove('hidden');
@@ -391,13 +478,11 @@
                 }
             });
 
-            const bottlesEl = document.getElementById('total_bottles_display');
-            const salesEl = document.getElementById('total_sales_display');
+            const bottlesEls = document.querySelectorAll('.total-bottles-display');
+            const salesEls = document.querySelectorAll('.total-sales-display');
 
-            if (bottlesEl && salesEl) {
-                bottlesEl.textContent = totalBottles;
-                salesEl.textContent = totalSales.toFixed(2);
-            }
+            bottlesEls.forEach(el => el.textContent = totalBottles);
+            salesEls.forEach(el => el.textContent = totalSales.toFixed(2));
             
             checkFormValidity(hasInvalid);
         }
@@ -421,10 +506,13 @@
 
         function checkFormValidity(hasInvalidRows) {
             const form = document.getElementById('dailyStockForm');
-            const submitBtn = document.getElementById('submitDayEntryBtn');
-            if (submitBtn) {
-                submitBtn.disabled = hasInvalidRows || !form.checkValidity();
-            }
+            const submitBtnDesktop = document.getElementById('submitDayEntryBtn');
+            const submitBtnMobile = document.getElementById('submitDayEntryBtnMobile');
+            
+            const isDisabled = hasInvalidRows || !form.checkValidity();
+            
+            if (submitBtnDesktop) submitBtnDesktop.disabled = isDisabled;
+            if (submitBtnMobile) submitBtnMobile.disabled = isDisabled;
         }
 
         function validateForm() {
